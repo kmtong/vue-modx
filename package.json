@@ -1,0 +1,27 @@
+{
+  "name": "vue-modx",
+  "version": "1.0.0",
+  "description": "让Vue像后台模块一样能通过插件方式添加功能。参考：",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@git.yunbaoguan.cn:zhijian/ui/vue-modx.git"
+  },
+  "keywords": [
+    "plugin",
+    "framework"
+  ],
+  "author": "kmtong@yunbaoguan.cn",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^26.4.2",
+    "ts-jest": "^26.3.0",
+    "typescript": "^4.0.2",
+    "vue": "^2.6.12"
+  }
+}
