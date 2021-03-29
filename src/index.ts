@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import { App } from 'vue';
 
 type ExtensionCallback = (context: StartupContext, obj: any) => void;
 
@@ -25,11 +25,11 @@ interface ModuleConfig {
 }
 
 class StartupContext {
-    vue: Vue;
+    vue: App;
     vueModx: object;
     registry: PluginRegistry;
     config?: object;
-    constructor(vue: Vue, vueModx: object, registry: PluginRegistry, config?: object) {
+    constructor(vue: App, vueModx: object, registry: PluginRegistry, config?: object) {
         this.vue = vue;
         this.vueModx = vueModx;
         this.registry = registry;
@@ -105,7 +105,7 @@ function standardize(modules: Array<Module>): Array<Module> {
         const exp = expand(m)
         for (var ins of exp) {
             if (names.find(n => n === ins.name)) {
-                console.log('% module name' + ins.name + 'already exists', 'color: #f70303')
+                console.log('% module name "' + ins.name + '" already exists', 'color: #f70303')
                 continue
             } else {
                 names.push(ins.name)
@@ -184,14 +184,14 @@ export function calculateStartupSeq(modules: Array<Module>): Array<Module> {
 let modules = null;
 
 const plugin = {
-    install(Vue, ops: ModuleConfig = { modules: [], config: {} }) {
+    install(app, ops: ModuleConfig = { modules: [], config: {} }) {
         let registry = new PluginRegistry(ops.config);
-        Vue.prototype.$pluginConfig = ops.config;
-        Vue.prototype.$pluginRegistry = registry;
+        app.provide['$pluginConfig'] = ops.config;
+        app.provide['$pluginRegistry'] = registry;
         let startupSeq = calculateStartupSeq(ops.modules);
         modules = startupSeq;
 
-        const context = new StartupContext(Vue, this, registry, ops.config);
+        const context = new StartupContext(app, this, registry, ops.config);
         startupSeq.forEach(mod => {
             if (mod.extensionPoints) {
                 for (const k in mod.extensionPoints) {

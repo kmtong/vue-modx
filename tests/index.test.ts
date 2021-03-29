@@ -86,7 +86,9 @@ test('Extension Tests', async () => {
         }
       }
     };
-    Vue.default.use(VueModx.default, {
+
+    let app = Vue.createApp({})
+    app.use(VueModx.default, {
       modules: [Mod1]
     });
     return extObj;
