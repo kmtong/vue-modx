@@ -1,4 +1,4 @@
-import { App } from 'vue';
+import { App } from "vue";
 
 type ExtensionCallback = (context: StartupContext, obj: any) => void;
 
@@ -29,7 +29,12 @@ class StartupContext {
     vueModx: object;
     registry: PluginRegistry;
     config?: object;
-    constructor(vue: App, vueModx: object, registry: PluginRegistry, config?: object) {
+    constructor(
+        vue: App,
+        vueModx: object,
+        registry: PluginRegistry,
+        config?: object
+    ) {
         this.vue = vue;
         this.vueModx = vueModx;
         this.registry = registry;
@@ -41,7 +46,6 @@ class StartupContext {
  * The core framework is to provide a plugin registry
  */
 class PluginRegistry {
-
     extensionCallbacks: Map<string, ExtensionCallback>;
     moduleVariables: Map<string, Map<string, any>>;
     config: object;
@@ -52,13 +56,20 @@ class PluginRegistry {
         this.config = config;
     }
 
-    registerExtensionPoint(extensionPointName: string, extensionCallback: ExtensionCallback) {
+    registerExtensionPoint(
+        extensionPointName: string,
+        extensionCallback: ExtensionCallback
+    ) {
         this.extensionCallbacks[extensionPointName] = extensionCallback;
     }
 
-    registerExtension(extensionPointName: string, obj: any): ((context: StartupContext) => void) {
+    registerExtension(
+        extensionPointName: string,
+        obj: any
+    ): (context: StartupContext) => void {
         if (this.extensionCallbacks[extensionPointName]) {
-            return (context) => this.extensionCallbacks[extensionPointName](context, obj);
+            return (context) =>
+                this.extensionCallbacks[extensionPointName](context, obj);
         } else {
             console.log("Invalid Extension Point: ", extensionPointName);
         }
@@ -90,26 +101,28 @@ class PluginRegistry {
         }
         return this.moduleVariables[moduleName];
     }
-
 }
 
 /**
  * as module dependsOn may contain Module object, expand and make dependsOn string array again.
- * 
- * @param modules 
+ *
+ * @param modules
  */
 function standardize(modules: Array<Module>): Array<Module> {
     let result = [];
     let names = [];
     for (var m of modules) {
-        const exp = expand(m)
+        const exp = expand(m);
         for (var ins of exp) {
-            if (names.find(n => n === ins.name)) {
-                console.log('% module name "' + ins.name + '" already exists', 'color: #f70303')
-                continue
+            if (names.find((n) => n === ins.name)) {
+                console.log(
+                    '% module name "' + ins.name + '" already exists',
+                    "color: #f70303"
+                );
+                continue;
             } else {
-                names.push(ins.name)
-                result.push(ins)
+                names.push(ins.name);
+                result.push(ins);
             }
         }
     }
@@ -119,64 +132,71 @@ function standardize(modules: Array<Module>): Array<Module> {
 function expand(module: Module): Array<Module> {
     let result = [];
     if (module) {
-
         if (module.dependsOn) {
-
             const deps = module.dependsOn;
             // 找出dependsOn集合中不是字符串的依赖
-            const modDeps = deps.filter(m => typeof m !== 'string') as Module[];
+            const modDeps = deps.filter((m) => typeof m !== "string") as Module[];
             // 递归查找dependsOn
-            result = result.concat(standardize(modDeps))
-            const stringDeps = module.dependsOn.map(m => {
-                if (typeof m === 'string') {
+            result = result.concat(standardize(modDeps));
+            const stringDeps = module.dependsOn.map((m) => {
+                if (typeof m === "string") {
                     return m;
                 } else {
                     return (m as Module).name;
                 }
-            })
+            });
 
             module.dependsOn = stringDeps; // fix as string dependencies
         }
-        result.push(module)
+        result.push(module);
     }
-    return result
+    return result;
 }
 
 /**
  * Used to calculate startup sequence using the dependsOn specification
- * 
- * @param modules 
+ *
+ * @param modules
  */
 export function calculateStartupSeq(modules: Array<Module>): Array<Module> {
-
     let rootModules = []; // push Module if no deps related
     let rootKeys = []; // root module keys
     let remainModules = standardize(modules);
 
     do {
-
         let progress = false;
-        remainModules.forEach(m => {
-            if (m.dependsOn == null || m.dependsOn.length == 0 || m.dependsOn.every(dep => rootKeys.find(x => dep === x))) {
+        remainModules.forEach((m) => {
+            if (
+                m.dependsOn == null ||
+                m.dependsOn.length == 0 ||
+                m.dependsOn.every((dep) => rootKeys.find((x) => dep === x))
+            ) {
                 rootModules.push(m);
                 rootKeys.push(m.name);
                 progress = true;
             }
         });
-        remainModules = remainModules.filter(m => rootKeys.indexOf(m.name) == -1);
+        remainModules = remainModules.filter((m) => rootKeys.indexOf(m.name) == -1);
 
         if (remainModules.length > 0 && !progress) {
-            let moduleNames = remainModules.map(m => m.name);
-            let missing = [].concat(...remainModules.map(m => m.dependsOn.filter(n => !rootKeys.includes(n)))) //
-                .filter(m => !moduleNames.includes(m)) //
+            let moduleNames = remainModules.map((m) => m.name);
+            let missing = []
+                .concat(
+                    ...remainModules.map((m) =>
+                        m.dependsOn.filter((n) => !rootKeys.includes(n))
+                    )
+                ) //
+                .filter((m) => !moduleNames.includes(m)) //
                 .filter((el, i, arr) => arr.indexOf(el) === i); // dedup
-            let base = remainModules.filter(m => m.dependsOn.find(m => missing.includes(m))) //
-                .map(m => m.name) //
+            let base = remainModules
+                .filter((m) => m.dependsOn.find((m) => missing.includes(m))) //
+                .map((m) => m.name) //
                 .filter((el, i, arr) => arr.indexOf(el) === i); // dedup
-            throw "Unresolved Dependencies for " + base + " (missing: " + missing + ")";
+            throw (
+                "Unresolved Dependencies for " + base + " (missing: " + missing + ")"
+            );
         }
-
-    } while (remainModules.length > 0)
+    } while (remainModules.length > 0);
 
     return rootModules;
 }
@@ -186,13 +206,13 @@ let modules = null;
 const plugin = {
     install(app, ops: ModuleConfig = { modules: [], config: {} }) {
         let registry = new PluginRegistry(ops.config);
-        app.provide['$pluginConfig'] = ops.config;
-        app.provide['$pluginRegistry'] = registry;
+        app.config.globalProperties.$pluginConfig = ops.config;
+        app.config.globalProperties.$pluginRegistry = registry;
         let startupSeq = calculateStartupSeq(ops.modules);
         modules = startupSeq;
 
         const context = new StartupContext(app, this, registry, ops.config);
-        startupSeq.forEach(mod => {
+        startupSeq.forEach((mod) => {
             if (mod.extensionPoints) {
                 for (const k in mod.extensionPoints) {
                     registry.registerExtensionPoint(k, mod.extensionPoints[k]);
@@ -201,18 +221,18 @@ const plugin = {
             if (mod.extensions) {
                 for (const k in mod.extensions) {
                     const ext = mod.extensions[k];
-                    if (typeof ext === 'function') {
+                    if (typeof ext === "function") {
                         registry.registerExtension(k, ext(context))(context);
                     } else {
                         registry.registerExtension(k, ext)(context);
                     }
                 }
             }
-        })
-        startupSeq.forEach(mod => {
+        });
+        startupSeq.forEach((mod) => {
             // start module (if any)
             if (mod.start) {
-                mod.start(context)
+                mod.start(context);
             }
         });
     },
@@ -221,10 +241,10 @@ const plugin = {
     },
     moduleByName(name: string) {
         if (modules) {
-            return modules.find(m => m.name === name);
+            return modules.find((m) => m.name === name);
         }
         return undefined;
     }
-}
+};
 
 export default plugin;
