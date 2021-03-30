@@ -77,7 +77,7 @@ classDiagram
 
 ```json
 {
-    "vue": Vue,  // vue during Vue.use()
+    "vue": App,  // vue app during app.use()
     "vueModx": VuexModule, // vuex-module during Vue.use()
     "registry": PluginRegistry,
     "config": { Options... }
@@ -110,7 +110,7 @@ var VueModx = require('vue-modx')
 var Module1 = require('module1')
 var Module2 = require('module2')
 
-Vue.use(VueModx, { modules: [Module1, Module2], config: {} })
+app.use(VueModx, { modules: [Module1, Module2], config: {} })
 ```
 
 ## 实现Module结构
